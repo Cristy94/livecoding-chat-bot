@@ -13,7 +13,10 @@ $('#context-menu').trigger('mouseout');
 
 var initialColor = $('#colorPremiumInput').val();
 
-var respones = {};
+var responses = {};
+if(localStorage.responses != undefined) {
+    responses = JSON.parse(localStorage.responses);
+}
 
 function Question() {
 
@@ -132,7 +135,7 @@ function processMessage() {
             break;
 
             case '!repo':
-                var repoName = respones.repo !== undefined ? respones.repo : 'not set :(';
+                var repoName = responses.repo !== undefined ? responses.repo : 'not set :(';
                 postMessage('@' + userName + ', the current repository is: ' + repoName);
             break;
 
@@ -156,9 +159,18 @@ function processMessage() {
                 if(userName != myUser) break;
                 
                 if(parameter != '') {
-                    respones.repo = 'http://' + parameter;
-                    postMessage('Repository set to ' + respones.repo);
+                    responses.repo = 'http://' + parameter;
+                    postMessage('Repository set to ' + responses.repo);
+
+                    // Save the repo to localStorage
+                    localStorage.responses = JSON.stringify(responses);
                 }
+            break;
+
+            case '!reset':
+                localStorage.removeItem('responses');
+                responses = {};
+                postMessage('Bot has been reset! :-s');
             break;
         }
     }
@@ -187,7 +199,7 @@ function askQuestion() {
     }
 
     question = new Question();
-    postMessage(question.text + " Type !ans 123 to answer...");
+    postMessage(question.text + " Type !ans {number} to answer...");
 
     // Ask a question every 80 seconds
     setTimeout(askQuestion, 80000);
@@ -201,4 +213,3 @@ function tick() {
 }
 
 tick();
-
