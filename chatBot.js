@@ -15,7 +15,6 @@ function Question() {
     this.answer = a + b;
 }
 
-
 $('.message', container).addClass('read');
 
 var leaderboard = {};
@@ -27,6 +26,10 @@ function postMessage(message) {
 
 function processMessage() {
     if(messageQueue.length == 0) 
+        return;
+
+    // Don't do anything if the streamer is writing
+    if(textarea.val() != '')
         return;
 
     var message = messageQueue.shift();
@@ -53,29 +56,10 @@ function processMessage() {
             parameter = command[1];
             command = command[0];
         }
-
-        // If it's our message, we process commands differently
-        if(userName == myUser) {
-            switch(command) {
-                case '!game':
-                    if(parameter == 'start') {
-                        gameStopped = false;
-                        postMessage('Admin has started the game! :)');
-                        askQuestion();
-                    }
-                    else if(parameter == 'stop') {
-                        postMessage('Admin has stopped the game! :(');
-                        gameStopped = true;
-                    }
-                break;
-            }
-
-            return;
-        }
-            
+           
         switch(command) {
             case '!time':
-                postMessage('@' + userName + ', the time is: ' + (new Date()).toUTCString());
+                postMessage('@' + userName + ', the time is: ' + (new Date()).toLocaleTimeString());
             break;
 
             case '!leaderboard':
@@ -115,6 +99,25 @@ function processMessage() {
 
                     postMessage('Congratulations ' + userName + '.' + answer + ' was the correct answer to ' + question.text);
                     question = undefined;
+                }
+            break;
+
+
+            // Admin only commands
+            case '!game':
+                // Check if admin (bot has been started by the current user)
+                if(userName != myUser) {
+                    break;
+                };
+
+                if(parameter == 'start') {
+                    gameStopped = false;
+                    postMessage('Admin has started the game! :)');
+                    askQuestion();
+                }
+                else if(parameter == 'stop') {
+                    postMessage('Admin has stopped the game! :(');
+                    gameStopped = true;
                 }
             break;
         }
