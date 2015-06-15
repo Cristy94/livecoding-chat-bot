@@ -5,6 +5,13 @@ var textarea = $('#message-textarea');
 var submit = $('input[type="submit"]');
 var myUser = $('.chat-heading div').text().replace('Chat: ', '');
 var gameStopped = true;
+var botWritingCount = 0;
+
+// Initiale the color pallete
+$('#username-color').trigger('click');
+$('#context-menu').trigger('mouseout');
+
+var initialColor = $('#colorPremiumInput').val();
 
 var respones = {};
 
@@ -22,8 +29,24 @@ $('.message', container).addClass('read');
 var leaderboard = {};
 
 function postMessage(message) {
-    textarea.val("BOT: " + message);
-    submit.trigger('click');
+    botWritingCount++;
+
+    // Make name white
+    $('.user-color-item').eq(0).attr('data-color', '#FFFFFF').trigger('click');
+    setTimeout(function(){    
+        textarea.val("BOT: " + message);
+        submit.trigger('click');
+
+        // Restore name color
+        botWritingCount--;
+        if(botWritingCount == 0) {
+            setTimeout(function() {
+                // Only change back the color if no message is being written
+                if(botWritingCount == 0)
+                $('.user-color-item').eq(0).attr('data-color', initialColor).trigger('click');
+            }, 300);
+        }
+    }, 500);
 }
 
 function processMessage() {
@@ -103,7 +126,7 @@ function processMessage() {
                         leaderboard[userName]++;
                     }
 
-                    postMessage('Congratulations ' + userName + '.' + answer + ' was the correct answer to ' + question.text);
+                    postMessage('Congratulations ' + userName + '. The correct answer was' + answer);
                     question = undefined;
                 }
             break;
