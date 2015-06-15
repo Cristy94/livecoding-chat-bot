@@ -6,6 +6,8 @@ var submit = $('input[type="submit"]');
 var myUser = $('.chat-heading div').text().replace('Chat: ', '');
 var gameStopped = true;
 
+var respones = {};
+
 function Question() {
 
     var a = Math.floor(100 * Math.random());
@@ -58,6 +60,10 @@ function processMessage() {
         }
            
         switch(command) {
+            case '!help':
+                postMessage('Available commands are !time, !leaderboard, !ans, !repo');
+            break;
+
             case '!time':
                 postMessage('@' + userName + ', the time is: ' + (new Date()).toLocaleTimeString());
             break;
@@ -102,13 +108,15 @@ function processMessage() {
                 }
             break;
 
+            case '!repo':
+                var repoName = respones.repo !== undefined ? respones.repo : 'not set :(';
+                postMessage('@' + userName + ', the current repository is: ' + repoName);
+            break;
 
             // Admin only commands
             case '!game':
                 // Check if admin (bot has been started by the current user)
-                if(userName != myUser) {
-                    break;
-                };
+                if(userName != myUser) break;
 
                 if(parameter == 'start') {
                     gameStopped = false;
@@ -118,6 +126,15 @@ function processMessage() {
                 else if(parameter == 'stop') {
                     postMessage('Admin has stopped the game! :(');
                     gameStopped = true;
+                }
+            break;
+
+            case '!set-repo':
+                if(userName != myUser) break;
+                
+                if(parameter != '') {
+                    respones.repo = 'http://' + parameter;
+                    postMessage('Repository set to ' + respones.repo);
                 }
             break;
         }
