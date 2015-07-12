@@ -72,7 +72,8 @@ function processMessage() {
             postMessage("Hello " + userJoined + " welcome to my stream!");
         }     
     } else {
-        var userName = $('a', message).text();
+        // var userName = $('a', message).text(); <- That includes all links in a message.
+        var userName = $('.nickname', message).text(); // There's a class for names! 
 
         // Check command
         var command = message.clone().children().remove().end().text();
