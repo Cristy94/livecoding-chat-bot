@@ -97,6 +97,9 @@ function processMessage() {
         switch(command) {
             case '!help':
                 var availableCommands = getBaseCommands().concat(getCustomCommands());
+                if(userName != myUser) {
+                    availableCommands = availableCommands.concat(getAdminCommands());
+                }
                 postMessage('Available commands are : ' + availableCommands.join(', '));
             break;
 
