@@ -96,10 +96,7 @@ function processMessage() {
            
         switch(command) {
             case '!help':
-                var availableCommands = ['!time', '!leaderboard', '!ans'];
-                for (customKey in responses) {
-                    availableCommands.push('!' + customKey);
-                }
+                var availableCommands = getBaseCommands().concat(getCustomCommands());
                 postMessage('Available commands are : ' + availableCommands.join(', '));
             break;
 
@@ -166,9 +163,14 @@ function processMessage() {
             case '!set':
                 if(userName != myUser) break;
                 
+                if (getBaseCommands().concat(getAdminCommands()).indexOf('!'+commandSetKey) > -1) {
+                    postMessage('Command ' + commandSetKey + ' is reserved !');
+                    break;
+                }
+                
                 if(commandSetKey != undefined && parameter != '') {
                     responses[commandSetKey] = parameter;
-                    postMessage('Key ' + commandSetKey + ' set to ' + responses[commandSetKey]);
+                    postMessage('Command ' + commandSetKey + ' set to ' + responses[commandSetKey]);
                     
                     localStorage.responses = JSON.stringify(responses);
                 }
@@ -201,6 +203,22 @@ function processMessages() {
         // Add new messages to the queue
         messageQueue.push($(this));
     });
+}
+
+function getBaseCommands() {
+    return ['!help', '!time', '!leaderboard', '!ans'];
+}
+
+function getAdminCommands() {
+    return ['!set', '!reset', '!game'];
+}
+
+function getCustomCommands() {
+    commands = [];
+    for (customKey in responses) {
+        commands.push('!' + customKey);
+    }
+    return commands;
 }
 
 var question;
