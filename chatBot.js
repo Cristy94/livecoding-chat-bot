@@ -3,7 +3,7 @@ var messageQueue = [];
 var messageCount;
 var textarea = $('#message-textarea');
 var submit = $('input[type="submit"]');
-var myUser = $('.chat-heading div').text().replace('Chat: ', '').toLowerCase();
+var myUser = $('.chat-heading div').text().replace('Chat: ', '').toUpperCase();
 var gameStopped = true;
 var botWritingCount = 0;
 
@@ -73,10 +73,12 @@ function processMessage() {
         }     
     } else {
         // var userName = $('a', message).text(); <- That includes all links in a message.
-        var userName = $('.nickname', message).text().toLowerCase(); // There's a class for names! 
+        var userName = $('.nickname', message).text(); // There's a class for names!
+
+        var regexp = new RegExp("^"+userName, "g");
 
         // Check command
-        var command = message.clone().children().remove().end().text();
+        var command = message.text().replace(regexp, '');
         var commandSetKey = undefined;
         var parameter = '';
         // See if the command has a parameter
@@ -97,7 +99,7 @@ function processMessage() {
         switch(command) {
             case '!help':
                 var availableCommands = getBaseCommands().concat(getCustomCommands());
-                if(userName == myUser) {
+                if(isAdmin(userName)) {
                     availableCommands = availableCommands.concat(getAdminCommands());
                 }
                 postMessage('Available commands are : ' + availableCommands.join(', '));
@@ -124,7 +126,6 @@ function processMessage() {
             break;
 
             case '!ans':
-
                 if(typeof question === 'undefined') {
                     postMessage("There is no unanswered question!");
                     break;
@@ -150,7 +151,7 @@ function processMessage() {
             // Admin only commands
             case '!game':
                 // Check if admin (bot has been started by the current user)
-                if(userName != myUser) break;
+                if(!isAdmin(userName)) break;
 
                 if(parameter == 'start') {
                     gameStopped = false;
@@ -164,7 +165,7 @@ function processMessage() {
             break;
 
             case '!set':
-                if(userName != myUser) break;
+                if(!isAdmin(userName)) break;
                 
                 if (getBaseCommands().concat(getAdminCommands()).indexOf('!'+commandSetKey) > -1) {
                     postMessage('Command ' + commandSetKey + ' is reserved !');
@@ -180,6 +181,8 @@ function processMessage() {
             break;
 
             case '!reset':
+                if(!isAdmin(userName)) break;
+                
                 responses = {};
                 localStorage.responses = undefined;
                 postMessage('Bot has been reset! :-s');
@@ -193,6 +196,10 @@ function processMessage() {
             break;
         }
     }
+}
+
+function isAdmin(userName) {
+    return userName.toUpperCase() == myUser;
 }
 
 function processMessages() {
