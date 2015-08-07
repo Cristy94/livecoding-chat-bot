@@ -25,9 +25,11 @@ function Question() {
 $('.message', container).addClass('read');
 
 var responses = {};
-if (localStorage.responses != 'undefined')
-{
+try {
     responses = JSON.parse(localStorage.responses);
+}
+catch (e) {
+    // Ignore
 }
 var leaderboard = {};
 
