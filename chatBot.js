@@ -3,7 +3,7 @@ var messageQueue = [];
 var messageCount;
 var textarea = $('#message-textarea');
 var submit = $('input[type="submit"]');
-var myUser = $('.chat-heading div').text().replace('Chat: ', '').toUpperCase();
+var myUser = $('.main-navigation .user-name').text().trim().toUpperCase();
 var gameStopped = true;
 var botWritingCount = 0;
 
@@ -91,10 +91,10 @@ function processMessage() {
             parameter = commands.join(' ');
             
             if (command.startsWith('!set-')) {
-                setCommands = command.split('-');
+                var setCommands = command.split('-');
                 
                 command = setCommands.shift();
-                commandSetKey = setCommands.join('-');
+                commandSetKey = setCommands[0];
             }
         }
            
