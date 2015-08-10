@@ -3,7 +3,7 @@ var messageQueue = [];
 var messageCount;
 var textarea = $('#message-textarea');
 var submit = $('input[type="submit"]');
-var myUser = $('.chat-heading div').text().replace('Chat: ', '');
+var myUser = $('.chat-heading div').text().replace('Chat: ', '').toUpperCase();
 var gameStopped = true;
 var botWritingCount = 0;
 
@@ -12,11 +12,6 @@ $('#username-color').trigger('click');
 $('#context-menu').trigger('mouseout');
 
 var initialColor = $('#colorPremiumInput').val();
-
-var responses = {};
-if(localStorage.responses != undefined) {
-    responses = JSON.parse(localStorage.responses);
-}
 
 function Question() {
 
@@ -29,6 +24,13 @@ function Question() {
 
 $('.message', container).addClass('read');
 
+var responses = {};
+try {
+    responses = JSON.parse(localStorage.responses);
+}
+catch (e) {
+    // Ignore
+}
 var leaderboard = {};
 
 function postMessage(message) {
@@ -73,22 +75,36 @@ function processMessage() {
         }     
     } else {
         // var userName = $('a', message).text(); <- That includes all links in a message.
-        var userName = $('.nickname', message).text(); // There's a class for names! 
+        var userName = $('.nickname', message).text(); // There's a class for names!
+
+        var regexp = new RegExp("^"+userName, "g");
 
         // Check command
-        var command = message.clone().children().remove().end().text();
+        var command = message.text().replace(regexp, '');
+        var commandSetKey = undefined;
         var parameter = '';
         // See if the command has a parameter
         if(command.indexOf(' ') != -1) { 
-            command = command.split(' ');
-
-            parameter = command[1];
-            command = command[0];
+            commands = command.split(' ');
+            
+            command = commands.shift();
+            parameter = commands.join(' ');
+            
+            if (command.startsWith('!set-')) {
+                setCommands = command.split('-');
+                
+                command = setCommands.shift();
+                commandSetKey = setCommands.join('-');
+            }
         }
            
         switch(command) {
             case '!help':
-                postMessage('Available commands are !time, !leaderboard, !ans, !repo');
+                var availableCommands = getBaseCommands().concat(getCustomCommands());
+                if(isAdmin(userName)) {
+                    availableCommands = availableCommands.concat(getAdminCommands());
+                }
+                postMessage('Available commands are : ' + availableCommands.join(', '));
             break;
 
             case '!time':
@@ -112,7 +128,6 @@ function processMessage() {
             break;
 
             case '!ans':
-
                 if(typeof question === 'undefined') {
                     postMessage("There is no unanswered question!");
                     break;
@@ -134,16 +149,11 @@ function processMessage() {
                     question = undefined;
                 }
             break;
-
-            case '!repo':
-                var repoName = responses.repo !== undefined ? responses.repo : 'not set :(';
-                postMessage('@' + userName + ', the current repository is: ' + repoName);
-            break;
-
+            
             // Admin only commands
             case '!game':
                 // Check if admin (bot has been started by the current user)
-                if(userName != myUser) break;
+                if(!isAdmin(userName)) break;
 
                 if(parameter == 'start') {
                     gameStopped = false;
@@ -156,25 +166,42 @@ function processMessage() {
                 }
             break;
 
-            case '!set-repo':
-                if(userName != myUser) break;
+            case '!set':
+                if(!isAdmin(userName)) break;
                 
-                if(parameter != '') {
-                    responses.repo = 'http://' + parameter;
-                    postMessage('Repository set to ' + responses.repo);
-
-                    // Save the repo to localStorage
+                if (getBaseCommands().concat(getAdminCommands()).indexOf('!'+commandSetKey) > -1) {
+                    postMessage('Command ' + commandSetKey + ' is reserved !');
+                    break;
+                }
+                
+                if(commandSetKey != undefined && parameter != '') {
+                    responses[commandSetKey] = parameter;
+                    postMessage('Command ' + commandSetKey + ' set to ' + responses[commandSetKey]);
+                    
                     localStorage.responses = JSON.stringify(responses);
                 }
             break;
 
             case '!reset':
-                localStorage.removeItem('responses');
+                if(!isAdmin(userName)) break;
+                
                 responses = {};
+                localStorage.responses = undefined;
                 postMessage('Bot has been reset! :-s');
+            break;
+            
+            default:
+                var key = command.replace('!', '');
+                if (responses[key] != undefined) {
+                    postMessage('@' + userName + ', ' + key + ' is : ' + responses[key]);
+                }
             break;
         }
     }
+}
+
+function isAdmin(userName) {
+    return userName.toUpperCase() == myUser;
 }
 
 function processMessages() {
@@ -188,6 +215,22 @@ function processMessages() {
         // Add new messages to the queue
         messageQueue.push($(this));
     });
+}
+
+function getBaseCommands() {
+    return ['!help', '!time', '!leaderboard', '!ans'];
+}
+
+function getAdminCommands() {
+    return ['!set', '!reset', '!game'];
+}
+
+function getCustomCommands() {
+    commands = [];
+    for (customKey in responses) {
+        commands.push('!' + customKey);
+    }
+    return commands;
 }
 
 var question;
