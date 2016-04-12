@@ -196,7 +196,6 @@ function processMessage() {
                 if (responses[key] != undefined) {
                     postMessage('@' + userName + ', ' + key + ' is : ' + responses[key]);
                 }
-                new Notification( userName + " message" );
             break;
         }
     }
