@@ -72,6 +72,7 @@ function processMessage() {
         if(text.indexOf(' joined the room.') != -1) {
             var userJoined = text.slice(0, text.indexOf(' joined the room.'));
             postMessage("Hello " + userJoined + " welcome to my stream!");
+            new Notification( userJoined + " has joined your livecoding chat! :)" );
         }     
     } else {
         // var userName = $('a', message).text(); <- That includes all links in a message.
